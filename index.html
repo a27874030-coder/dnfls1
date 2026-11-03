@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON PLUSH CATCHER</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- 상단: 제목 / 남은 시간 / 점수 / 획득 인형 수 -->
+    <header class="hud">
+      <h1 class="title" id="gameTitle">NEON PLUSH CATCHER</h1>
+      <div class="stats">
+        <div class="stat" id="timeBox">
+          <span class="label">TIME</span>
+          <span class="value" id="timeValue">60</span>
+        </div>
+        <div class="stat" id="scoreBox">
+          <span class="label">SCORE</span>
+          <span class="value" id="scoreValue">0</span>
+          <span class="score-pop" id="scorePop"></span>
+        </div>
+        <div class="stat" id="plushBox">
+          <span class="label">PLUSH</span>
+          <span class="value" id="plushValue">0</span>
+        </div>
+      </div>
+      <button id="settingsBtn" class="icon-btn" title="설정" aria-label="설정">⚙</button>
+    </header>
+
+    <!-- 중앙: 인형뽑기 기계 -->
+    <main class="stage" id="stage">
+      <canvas id="gameCanvas" width="800" height="940"></canvas>
+
+      <!-- 구석: 손 인식 상태 표시등 + 간단 안내 -->
+      <aside class="hand-badge" id="handBadge">
+        <div class="hand-row"><span class="led" id="hudLed"></span><span id="hudHandText">카메라 꺼짐</span></div>
+        <div class="hand-tip">✋ 손바닥: 이동 &nbsp;·&nbsp; ✊ 주먹: 집게</div>
+      </aside>
+
+      <!-- 손이 안 보여 일시정지됐을 때 -->
+      <div class="pause-banner hidden" id="pauseBanner">
+        <b>✋ 손을 카메라에 보여 주세요</b>
+        <span>손이 보이면 게임이 다시 시작돼요 (일시정지 중)</span>
+      </div>
+
+      <div class="toast hidden" id="toast"></div>
+    </main>
+
+    <!-- 하단: 조작 안내 -->
+    <footer class="footer-hint">
+      <span>✋ 손바닥을 펴고 좌우로 움직이면 집게가 따라와요</span>
+      <span>✊ 주먹을 쥐면 집게가 내려가요 (한 번 쥐면 한 번만 작동)</span>
+      <span id="kbdHint" class="hidden">⌨ ← → 이동 · Space 집게 · R 재시작</span>
+    </footer>
+  </div>
+
+  <!-- 카메라 영상은 화면에 보여 주지 않아요 (손 인식에만 사용) -->
+  <video id="cam" playsinline muted></video>
+
+  <!-- 시작 화면 -->
+  <div class="overlay" id="startOverlay">
+    <section class="panel">
+      <h2 class="big-title" id="startTitle">NEON PLUSH CATCHER</h2>
+      <p class="tagline" id="startTagline"></p>
+      <p class="rules" id="startRules"></p>
+
+      <div class="guide-cards">
+        <div class="card"><div class="emoji">✋</div><b>손바닥 펴기</b><span>좌우로 움직이면<br>집게가 따라 움직여요</span></div>
+        <div class="card"><div class="emoji">✊</div><b>주먹 쥐기</b><span>집게가 내려가 인형을 잡아요<br>(한 번 쥐면 한 번만!)</span></div>
+      </div>
+
+      <div class="cam-box">
+        <div class="cam-status"><span class="led" id="camLed"></span><span id="camStatusText">카메라 꺼짐</span></div>
+        <button id="camBtn" class="btn small">📷 카메라 켜기</button>
+      </div>
+      <p class="cam-note">카메라 영상은 화면에 나오지 않고, 손 모양을 읽는 데만 쓰여요.</p>
+
+      <div class="settings-slot"></div>
+      <p class="kbd-note">⌨ 키보드 테스트 모드(켜면 사용): ← → 이동 / Space 집게 / R 재시작</p>
+
+      <button id="startBtn" class="btn big">GAME START</button>
+    </section>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="overlay hidden" id="resultOverlay">
+    <section class="panel result">
+      <h2 class="big-title">TIME UP!</h2>
+      <div class="grade" id="gradeBadge">브론즈</div>
+      <div class="result-score"><span>FINAL SCORE</span><b id="resultScore">0</b></div>
+      <div class="result-count">획득한 인형 <b id="resultCount">0</b>개</div>
+      <div class="collection" id="resultCollection"></div>
+      <div class="btn-row">
+        <button id="retryBtn" class="btn big">다시 도전하기</button>
+        <button id="menuBtn" class="btn">처음 화면</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 설정 화면 (플레이 중 ⚙ 버튼) -->
+  <div class="overlay hidden" id="settingsOverlay">
+    <section class="panel small-panel">
+      <h2 class="big-title small">설정</h2>
+      <div class="settings-slot"></div>
+      <p class="kbd-note">게임을 하던 중이면 설정 창이 열려 있는 동안 잠시 멈춰요.</p>
+      <button id="settingsClose" class="btn big">계속하기</button>
+    </section>
+  </div>
+
+  <!-- 코드 파일 불러오기 (순서가 중요해요!) -->
+  <script src="js/config.js"></script>
+  <script src="js/plush-art.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/hand-tracker.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
